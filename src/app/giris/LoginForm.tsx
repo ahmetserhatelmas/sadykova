@@ -25,8 +25,8 @@ export function LoginForm() {
       email,
       password,
     });
-    setLoading(false);
     if (signError) {
+      setLoading(false);
       setError(signError.message);
       return;
     }
@@ -41,7 +41,8 @@ export function LoginForm() {
       </Link>
       <form
         onSubmit={onSubmit}
-        className="w-full max-w-md rounded-[2rem] bg-white p-8 shadow-sm ring-1 ring-black/5"
+        aria-busy={loading}
+        className={`relative w-full max-w-md rounded-[2rem] bg-white p-8 shadow-sm ring-1 ring-black/5 ${loading ? "cursor-wait" : ""}`}
       >
         <h1 className="text-2xl font-black uppercase tracking-tight text-black">
           Giriş yap
@@ -63,9 +64,10 @@ export function LoginForm() {
             type="email"
             autoComplete="email"
             required
+            disabled={loading}
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="mt-2 w-full rounded-xl border border-black/10 bg-[#F8F9FA] px-4 py-3 text-sm font-medium text-black outline-none focus:ring-2 focus:ring-[#D1FF4E]"
+            className="mt-2 w-full rounded-xl border border-black/10 bg-[#F8F9FA] px-4 py-3 text-sm font-medium text-black outline-none focus:ring-2 focus:ring-[#D1FF4E] disabled:cursor-wait disabled:opacity-60"
           />
         </label>
         <div className="mt-4">
@@ -75,7 +77,8 @@ export function LoginForm() {
             </label>
             <Link
               href="/giris/sifremi-unuttum"
-              className="text-xs font-bold text-zinc-600 underline hover:text-black"
+              tabIndex={loading ? -1 : undefined}
+              className={`text-xs font-bold text-zinc-600 underline hover:text-black ${loading ? "pointer-events-none opacity-40" : ""}`}
             >
               Şifremi unuttum
             </Link>
@@ -84,9 +87,10 @@ export function LoginForm() {
             type="password"
             autoComplete="current-password"
             required
+            disabled={loading}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="mt-2 w-full rounded-xl border border-black/10 bg-[#F8F9FA] px-4 py-3 text-sm font-medium text-black outline-none focus:ring-2 focus:ring-[#D1FF4E]"
+            className="mt-2 w-full rounded-xl border border-black/10 bg-[#F8F9FA] px-4 py-3 text-sm font-medium text-black outline-none focus:ring-2 focus:ring-[#D1FF4E] disabled:cursor-wait disabled:opacity-60"
           />
         </div>
         {error ? (
@@ -97,13 +101,32 @@ export function LoginForm() {
         <button
           type="submit"
           disabled={loading}
-          className="mt-8 w-full rounded-full bg-[#D1FF4E] py-3 text-sm font-black uppercase text-black hover:brightness-95 disabled:opacity-60"
+          className="mt-8 flex min-h-[48px] w-full items-center justify-center gap-2 rounded-full bg-[#D1FF4E] px-4 py-3 text-sm font-black uppercase text-black hover:brightness-95 disabled:opacity-90"
         >
-          {loading ? "Giriş…" : "Giriş yap"}
+          {loading ? (
+            <>
+              <span
+                className="h-4 w-4 shrink-0 animate-spin rounded-full border-2 border-black/20 border-t-black"
+                aria-hidden
+              />
+              <span>Giriş yapılıyor…</span>
+            </>
+          ) : (
+            "Giriş yap"
+          )}
         </button>
+        {loading ? (
+          <p className="mt-3 text-center text-xs font-medium text-zinc-500" role="status">
+            Hesabınız doğrulanıyor, birkaç saniye sürebilir.
+          </p>
+        ) : null}
         <p className="mt-6 text-center text-sm text-zinc-600">
           Hesabınız yok mu?{" "}
-          <Link href="/kayit" className="font-bold text-black underline">
+          <Link
+            href="/kayit"
+            tabIndex={loading ? -1 : undefined}
+            className={`font-bold text-black underline ${loading ? "pointer-events-none opacity-40" : ""}`}
+          >
             Kayıt ol
           </Link>
         </p>
