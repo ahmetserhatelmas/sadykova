@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { site } from "@/lib/site";
+import { getPublicSiteUrl, site } from "@/lib/site";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -20,13 +20,12 @@ export default function RegisterPage() {
     setError(null);
     setLoading(true);
     const supabase = createClient();
-    const origin =
-      typeof window !== "undefined" ? window.location.origin : "";
+    const base = getPublicSiteUrl();
     const { error: signError } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        emailRedirectTo: `${origin}/auth/callback?next=/panel/programlar`,
+        emailRedirectTo: `${base}/auth/callback?next=/panel/programlar`,
         data: { full_name: fullName },
       },
     });

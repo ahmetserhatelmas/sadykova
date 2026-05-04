@@ -10,6 +10,7 @@ export function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const next = searchParams.get("next") ?? "/panel/programlar";
+  const passwordResetOk = searchParams.get("sifre") === "yenilendi";
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -48,6 +49,14 @@ export function LoginForm() {
         <p className="mt-2 text-sm text-zinc-600">
           Üye paneline erişmek için e-posta ve şifrenizi girin.
         </p>
+        {passwordResetOk ? (
+          <p
+            className="mt-4 rounded-xl bg-green-50 px-4 py-3 text-sm font-medium text-green-800 ring-1 ring-green-200/80"
+            role="status"
+          >
+            Şifreniz güncellendi. Yeni şifrenizle giriş yapabilirsiniz.
+          </p>
+        ) : null}
         <label className="mt-8 block text-xs font-bold uppercase text-zinc-500">
           E-posta
           <input
@@ -59,8 +68,18 @@ export function LoginForm() {
             className="mt-2 w-full rounded-xl border border-black/10 bg-[#F8F9FA] px-4 py-3 text-sm font-medium text-black outline-none focus:ring-2 focus:ring-[#D1FF4E]"
           />
         </label>
-        <label className="mt-4 block text-xs font-bold uppercase text-zinc-500">
-          Şifre
+        <div className="mt-4">
+          <div className="flex items-baseline justify-between gap-2">
+            <label className="block text-xs font-bold uppercase text-zinc-500">
+              Şifre
+            </label>
+            <Link
+              href="/giris/sifremi-unuttum"
+              className="text-xs font-bold text-zinc-600 underline hover:text-black"
+            >
+              Şifremi unuttum
+            </Link>
+          </div>
           <input
             type="password"
             autoComplete="current-password"
@@ -69,7 +88,7 @@ export function LoginForm() {
             onChange={(e) => setPassword(e.target.value)}
             className="mt-2 w-full rounded-xl border border-black/10 bg-[#F8F9FA] px-4 py-3 text-sm font-medium text-black outline-none focus:ring-2 focus:ring-[#D1FF4E]"
           />
-        </label>
+        </div>
         {error ? (
           <p className="mt-4 text-sm font-medium text-red-600" role="alert">
             {error}
