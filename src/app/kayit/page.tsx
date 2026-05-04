@@ -6,6 +6,17 @@ import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { getPublicSiteUrl, site } from "@/lib/site";
 
+const DUPLICATE_EMAIL_MSG = "Bu mail zaten kayıtlıdır.";
+
+function isDuplicateSignupError(message: string) {
+  const m = message.toLowerCase();
+  return (
+    m.includes("already registered") ||
+    m.includes("user already exists") ||
+    m.includes("email address is already")
+  );
+}
+
 export default function RegisterPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
@@ -31,15 +42,16 @@ export default function RegisterPage() {
     });
     setLoading(false);
     if (signError) {
-      setError(signError.message);
+      setError(
+        isDuplicateSignupError(signError.message)
+          ? DUPLICATE_EMAIL_MSG
+          : signError.message,
+      );
       return;
     }
-    // Supabase: Bu e-posta zaten kayıtlıysa hata vermeden "sahte" kullanıcı dönebilir;
-    // bu durumda onay maili gitmez (e-posta sızdırmama politikası).
+    // Supabase: Bazen kayıtlı e-postada hata vermeden identities=[] döner (sızdırmama).
     if (data.user?.identities?.length === 0) {
-      setError(
-        "Bu e-posta ile zaten bir hesap var. Giriş yapın veya şifrenizi sıfırlayın.",
-      );
+      setError(DUPLICATE_EMAIL_MSG);
       return;
     }
     if (data.session) {
