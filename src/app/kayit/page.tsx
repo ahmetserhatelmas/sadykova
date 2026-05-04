@@ -21,7 +21,7 @@ export default function RegisterPage() {
     setLoading(true);
     const supabase = createClient();
     const base = getPublicSiteUrl();
-    const { error: signError } = await supabase.auth.signUp({
+    const { data, error: signError } = await supabase.auth.signUp({
       email,
       password,
       options: {
@@ -32,6 +32,19 @@ export default function RegisterPage() {
     setLoading(false);
     if (signError) {
       setError(signError.message);
+      return;
+    }
+    // Supabase: Bu e-posta zaten kayıtlıysa hata vermeden "sahte" kullanıcı dönebilir;
+    // bu durumda onay maili gitmez (e-posta sızdırmama politikası).
+    if (data.user?.identities?.length === 0) {
+      setError(
+        "Bu e-posta ile zaten bir hesap var. Giriş yapın veya şifrenizi sıfırlayın.",
+      );
+      return;
+    }
+    if (data.session) {
+      router.push("/panel/programlar");
+      router.refresh();
       return;
     }
     setSent(true);
