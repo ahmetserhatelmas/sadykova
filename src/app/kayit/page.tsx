@@ -4,18 +4,11 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import {
+  DUPLICATE_EMAIL_MSG,
+  formatSignUpError,
+} from "@/lib/auth-errors";
 import { getPublicSiteUrl, site } from "@/lib/site";
-
-const DUPLICATE_EMAIL_MSG = "Bu mail zaten kayıtlıdır.";
-
-function isDuplicateSignupError(message: string) {
-  const m = message.toLowerCase();
-  return (
-    m.includes("already registered") ||
-    m.includes("user already exists") ||
-    m.includes("email address is already")
-  );
-}
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -42,11 +35,7 @@ export default function RegisterPage() {
     });
     setLoading(false);
     if (signError) {
-      setError(
-        isDuplicateSignupError(signError.message)
-          ? DUPLICATE_EMAIL_MSG
-          : signError.message,
-      );
+      setError(formatSignUpError(signError.message));
       return;
     }
     // Supabase: Bazen kayıtlı e-postada hata vermeden identities=[] döner (sızdırmama).
@@ -55,6 +44,13 @@ export default function RegisterPage() {
       return;
     }
     if (data.session) {
+      const u = data.user;
+      if (u && !u.email_confirmed_at) {
+        await supabase.auth.signOut();
+        setSent(true);
+        router.refresh();
+        return;
+      }
       router.push("/panel/programlar");
       router.refresh();
       return;
@@ -73,10 +69,21 @@ export default function RegisterPage() {
           Kayıt ol
         </h1>
         {sent ? (
-          <p className="mt-4 text-sm leading-relaxed text-zinc-600">
-            E-postanıza bir onay linki gönderdik. Gelen kutunuzu kontrol edin;
-            ardından giriş yapabilirsiniz.
-          </p>
+          <div className="mt-4 space-y-3 text-sm leading-relaxed text-zinc-600">
+            <p>
+              E-postanıza bir onay linki gönderdik. Gelen kutunuzu ve spam
+              klasörünü kontrol edin; bağlantıya tıkladıktan sonra giriş
+              yapabilirsiniz.
+            </p>
+            <p className="rounded-xl bg-zinc-100 px-3 py-2 text-xs text-zinc-700">
+              <span className="font-bold text-zinc-900">Not:</span> Şifreyle
+              onaysız giriş açılıyorsa Supabase’te{" "}
+              <span className="font-semibold">
+                Authentication → Providers → Email → Confirm email
+              </span>{" "}
+              seçeneğini açın; aksi halde sistem e-postayı zorunlu saymaz.
+            </p>
+          </div>
         ) : (
           <form onSubmit={onSubmit} className="mt-6">
             <label className="block text-xs font-bold uppercase text-zinc-500">

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
+import { formatLoginError } from "@/lib/auth-errors";
 import { createClient } from "@/lib/supabase/client";
 import { site } from "@/lib/site";
 
@@ -30,7 +31,7 @@ export function LoginForm() {
     });
     if (signError) {
       setLoading(false);
-      setError(signError.message);
+      setError(formatLoginError(signError.message));
       return;
     }
     const {

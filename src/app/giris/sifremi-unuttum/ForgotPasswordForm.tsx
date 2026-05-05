@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { formatPasswordResetEmailError } from "@/lib/auth-errors";
 import { getPublicSiteUrl, site } from "@/lib/site";
 
 export function ForgotPasswordForm() {
@@ -30,7 +31,7 @@ export function ForgotPasswordForm() {
     );
     setLoading(false);
     if (resetError) {
-      setError(resetError.message);
+      setError(formatPasswordResetEmailError(resetError.message));
       return;
     }
     setSent(true);
