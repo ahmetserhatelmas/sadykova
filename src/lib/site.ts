@@ -3,14 +3,18 @@ function trimTrailingSlashes(url: string) {
 }
 
 /**
- * Auth e-postalarındaki yönlendirmeler için kanonik adres.
- * Vercel’de `NEXT_PUBLIC_SITE_URL=https://sadykova.vercel.app` tanımlayın.
- * Yoksa tarayıcıda `window.location.origin` kullanılır.
+ * Auth `redirectTo` / `emailRedirectTo` tabanı.
+ * Tarayıcıda **her zaman** `window.location.origin` kullanılır; böylece
+ * `.env` içinde localhost kalsa bile sadykova.vercel.app üzerinden kayıt
+ * olunca e-postadaki link üretim adresine gider.
+ * Sunucuda (window yok) `NEXT_PUBLIC_SITE_URL` kullanılır.
  */
 export function getPublicSiteUrl(): string {
+  if (typeof window !== "undefined") {
+    return window.location.origin;
+  }
   const fromEnv = process.env.NEXT_PUBLIC_SITE_URL?.trim();
   if (fromEnv) return trimTrailingSlashes(fromEnv);
-  if (typeof window !== "undefined") return window.location.origin;
   return "";
 }
 
