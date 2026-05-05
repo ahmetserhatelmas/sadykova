@@ -2,18 +2,29 @@ function trimTrailingSlashes(url: string) {
   return url.replace(/\/+$/, "");
 }
 
+function isLocalhostUrl(url: string) {
+  try {
+    const u = new URL(url);
+    return u.hostname === "localhost" || u.hostname === "127.0.0.1";
+  } catch {
+    return true;
+  }
+}
+
 /**
  * Auth `redirectTo` / `emailRedirectTo` tabanı.
- * Tarayıcıda **her zaman** `window.location.origin` kullanılır; böylece
- * `.env` içinde localhost kalsa bile sadykova.vercel.app üzerinden kayıt
- * olunca e-postadaki link üretim adresine gider.
- * Sunucuda (window yok) `NEXT_PUBLIC_SITE_URL` kullanılır.
+ * - Vercel’de `NEXT_PUBLIC_SITE_URL=https://sadykova.vercel.app` ise (localhost değilse)
+ *   **her zaman** bu adres kullanılır; böylece maildeki link asla yanlışlıkla localhost olmaz.
+ * - `.env` localhost ise veya env yoksa tarayıcıda `window.location.origin` kullanılır.
  */
 export function getPublicSiteUrl(): string {
+  const fromEnv = process.env.NEXT_PUBLIC_SITE_URL?.trim();
+  if (fromEnv && !isLocalhostUrl(fromEnv)) {
+    return trimTrailingSlashes(fromEnv);
+  }
   if (typeof window !== "undefined") {
     return window.location.origin;
   }
-  const fromEnv = process.env.NEXT_PUBLIC_SITE_URL?.trim();
   if (fromEnv) return trimTrailingSlashes(fromEnv);
   return "";
 }
