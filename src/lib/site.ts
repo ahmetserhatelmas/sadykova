@@ -13,18 +13,32 @@ function isLocalhostUrl(url: string) {
 
 /**
  * Auth `redirectTo` / `emailRedirectTo` tabanı.
- * - Vercel’de `NEXT_PUBLIC_SITE_URL=https://sadykova.vercel.app` ise (localhost değilse)
- *   **her zaman** bu adres kullanılır; böylece maildeki link asla yanlışlıkla localhost olmaz.
- * - `.env` localhost ise veya env yoksa tarayıcıda `window.location.origin` kullanılır.
+ * 1) `NEXT_PUBLIC_SITE_URL` canlı adres ise o kullanılır.
+ * 2) `NODE_ENV=production` iken tarayıcı localhost’taysa (prod build’i local çalıştırma vb.)
+ *    veya origin yoksa → `NEXT_PUBLIC_APP_CANONICAL_URL` veya sadykova.vercel.app.
+ * 3) Geliştirme (`next dev`) → her zaman `window.location.origin` (genelde localhost).
  */
+const CANONICAL_PRODUCTION_ORIGIN =
+  process.env.NEXT_PUBLIC_APP_CANONICAL_URL?.trim() ||
+  "https://sadykova.vercel.app";
+
 export function getPublicSiteUrl(): string {
   const fromEnv = process.env.NEXT_PUBLIC_SITE_URL?.trim();
   if (fromEnv && !isLocalhostUrl(fromEnv)) {
     return trimTrailingSlashes(fromEnv);
   }
-  if (typeof window !== "undefined") {
-    return window.location.origin;
+
+  const origin =
+    typeof window !== "undefined" ? window.location.origin : null;
+
+  if (process.env.NODE_ENV === "production") {
+    if (origin && !isLocalhostUrl(origin)) {
+      return origin;
+    }
+    return trimTrailingSlashes(CANONICAL_PRODUCTION_ORIGIN);
   }
+
+  if (origin) return origin;
   if (fromEnv) return trimTrailingSlashes(fromEnv);
   return "";
 }
