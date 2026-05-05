@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { LogoutButton } from "@/components/auth/LogoutButton";
 import { createClient } from "@/lib/supabase/server";
+import { redirectIfEmailUnconfirmed } from "@/lib/supabase/require-email-confirmed";
 import { site } from "@/lib/site";
 
 export const dynamic = "force-dynamic";
@@ -16,6 +17,7 @@ export default async function AdminLayout({
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) redirect("/giris?next=/admin");
+  await redirectIfEmailUnconfirmed(supabase, user, "/admin");
 
   const { data: profile } = await supabase
     .from("profiles")

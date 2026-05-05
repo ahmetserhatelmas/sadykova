@@ -11,6 +11,8 @@ export function LoginForm() {
   const searchParams = useSearchParams();
   const next = searchParams.get("next") ?? "/panel/programlar";
   const passwordResetOk = searchParams.get("sifre") === "yenilendi";
+  const emailNotConfirmed =
+    searchParams.get("hata") === "eposta-onayi";
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -28,6 +30,17 @@ export function LoginForm() {
     if (signError) {
       setLoading(false);
       setError(signError.message);
+      return;
+    }
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (user && !user.email_confirmed_at) {
+      await supabase.auth.signOut();
+      setLoading(false);
+      setError(
+        "E-postanızı henüz onaylamadınız. Kayıt e-postasındaki doğrulama bağlantısına tıklayın (spam klasörüne de bakın).",
+      );
       return;
     }
     router.push(next);
@@ -56,6 +69,15 @@ export function LoginForm() {
             role="status"
           >
             Şifreniz güncellendi. Yeni şifrenizle giriş yapabilirsiniz.
+          </p>
+        ) : null}
+        {emailNotConfirmed ? (
+          <p
+            className="mt-4 rounded-xl bg-amber-50 px-4 py-3 text-sm font-medium text-amber-950 ring-1 ring-amber-200/90"
+            role="alert"
+          >
+            Üye alanına girmek için önce e-postanızı doğrulamanız gerekir. Gelen
+            kutunuzdaki bağlantıya tıklayın.
           </p>
         ) : null}
         <label className="mt-8 block text-xs font-bold uppercase text-zinc-500">

@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { LogoutButton } from "@/components/auth/LogoutButton";
 import { PanelTabNav } from "@/components/panel/PanelTabNav";
 import { createClient } from "@/lib/supabase/server";
+import { redirectIfEmailUnconfirmed } from "@/lib/supabase/require-email-confirmed";
 import { site } from "@/lib/site";
 import { formatTier } from "@/lib/membership";
 import type { MembershipTier } from "@/types/db";
@@ -19,6 +20,7 @@ export default async function PanelLayout({
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) redirect("/giris?next=/panel");
+  await redirectIfEmailUnconfirmed(supabase, user, "/panel");
 
   const { data: profile } = await supabase
     .from("profiles")
