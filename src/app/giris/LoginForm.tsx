@@ -13,6 +13,7 @@ export function LoginForm() {
   const passwordResetOk = searchParams.get("sifre") === "yenilendi";
   const emailNotConfirmed =
     searchParams.get("hata") === "eposta-onayi";
+  const oauthCallbackFailed = searchParams.get("hata") === "oauth";
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -78,6 +79,19 @@ export function LoginForm() {
           >
             Üye alanına girmek için önce e-postanızı doğrulamanız gerekir. Gelen
             kutunuzdaki bağlantıya tıklayın.
+          </p>
+        ) : null}
+        {oauthCallbackFailed ? (
+          <p
+            className="mt-4 rounded-xl bg-amber-50 px-4 py-3 text-sm font-medium text-amber-950 ring-1 ring-amber-200/90"
+            role="alert"
+          >
+            Doğrulama bağlantısı işe yaramadı (süresi dolmuş veya zaten
+            kullanılmış olabilir). Yeni onay e-postası için{" "}
+            <Link href="/kayit" className="font-black underline">
+              kayıt
+            </Link>{" "}
+            sayfasını kullanın veya şifrenizle giriş yapın.
           </p>
         ) : null}
         <label className="mt-8 block text-xs font-bold uppercase text-zinc-500">

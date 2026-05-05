@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { Suspense } from "react";
 import { LogoutButton } from "@/components/auth/LogoutButton";
+import { EmailConfirmedNotice } from "@/components/panel/EmailConfirmedNotice";
 import { PanelTabNav } from "@/components/panel/PanelTabNav";
 import { createClient } from "@/lib/supabase/server";
 import { redirectIfEmailUnconfirmed } from "@/lib/supabase/require-email-confirmed";
@@ -57,6 +59,9 @@ export default async function PanelLayout({
       </header>
 
       <div className="mx-auto max-w-6xl px-4 py-6 sm:px-8 sm:py-8">
+        <Suspense fallback={null}>
+          <EmailConfirmedNotice />
+        </Suspense>
         <div className="overflow-hidden rounded-[1.75rem] bg-gradient-to-br from-white via-white to-[#eef0e3] p-6 shadow-sm ring-1 ring-black/5 sm:flex sm:items-center sm:justify-between sm:p-8">
           <div>
             <p className="text-xs font-bold uppercase tracking-wider text-zinc-500">

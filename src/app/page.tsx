@@ -1,3 +1,5 @@
+import { Suspense } from "react";
+import { AuthRedirectMessage } from "@/components/home/AuthRedirectMessage";
 import { HeroSection } from "@/components/home/HeroSection";
 import { HomePackages } from "@/components/home/HomePackages";
 import { ProgramShowcase } from "@/components/home/ProgramShowcase";
@@ -8,6 +10,9 @@ export default async function HomePage() {
   return (
     <div className="min-h-screen bg-[#F1F3F5] text-black">
       <SiteHeader />
+      <Suspense fallback={null}>
+        <AuthRedirectMessage />
+      </Suspense>
       <HeroSection />
       <ProgramShowcase />
       <HomePackages />
