@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { DeleteProgramButton } from "@/components/admin/DeleteProgramButton";
 import { createClient } from "@/lib/supabase/server";
 
 type ProgramListRow = {
@@ -141,12 +142,15 @@ export default async function AdminProgramsPage() {
                                 ) : null}
                               </p>
                             </div>
-                            <Link
-                              href={`/admin/programlar/${p.id}`}
-                              className="text-xs font-bold uppercase text-[#6a7a00] hover:underline"
-                            >
-                              Düzenle
-                            </Link>
+                            <div className="flex flex-wrap items-center gap-4 sm:gap-5">
+                              <Link
+                                href={`/admin/programlar/${p.id}`}
+                                className="text-xs font-bold uppercase text-[#6a7a00] hover:underline"
+                              >
+                                Düzenle
+                              </Link>
+                              <DeleteProgramButton id={p.id} title={p.title} />
+                            </div>
                           </li>
                         ))}
                       </ul>
