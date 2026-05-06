@@ -2,16 +2,10 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { DeleteHomePackageButton } from "@/components/admin/DeleteHomePackageButton";
 import { HomePackageForm } from "@/components/admin/HomePackageForm";
+import { parseHomePackageFeatures } from "@/lib/home-package-features";
 import { createClient } from "@/lib/supabase/server";
 
 type Props = { params: Promise<{ id: string }> };
-
-function parseFeatures(raw: unknown): string[] {
-  if (Array.isArray(raw)) {
-    return raw.filter((x): x is string => typeof x === "string");
-  }
-  return [];
-}
 
 export default async function AdminEvPaketDuzenlePage({ params }: Props) {
   const { id } = await params;
@@ -26,7 +20,7 @@ export default async function AdminEvPaketDuzenlePage({ params }: Props) {
 
   if (!row) notFound();
 
-  const features = parseFeatures(row.features);
+  const features = parseHomePackageFeatures(row.features);
   const initial = {
     id: row.id,
     title: row.title,

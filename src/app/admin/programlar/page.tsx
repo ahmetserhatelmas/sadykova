@@ -144,6 +144,12 @@ export default async function AdminProgramsPage() {
                             </div>
                             <div className="flex flex-wrap items-center gap-4 sm:gap-5">
                               <Link
+                                href={`/admin/programlar/${p.id}/onizleme`}
+                                className="text-xs font-bold uppercase text-zinc-600 hover:text-black hover:underline"
+                              >
+                                Önizle
+                              </Link>
+                              <Link
                                 href={`/admin/programlar/${p.id}`}
                                 className="text-xs font-bold uppercase text-[#6a7a00] hover:underline"
                               >

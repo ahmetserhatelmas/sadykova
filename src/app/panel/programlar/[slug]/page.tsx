@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
+import { ProgramMemberPreview } from "@/components/programs/ProgramMemberPreview";
 import { createClient } from "@/lib/supabase/server";
 import { publicStorageUrl } from "@/lib/site";
 
@@ -79,54 +80,14 @@ export default async function PanelProgramPage({ params }: Props) {
     : null;
 
   return (
-    <article className="mt-8">
-      <Link
-        href="/panel/programlar"
-        className="text-xs font-bold uppercase text-zinc-500 hover:text-black"
-      >
-        ← Programlarım
-      </Link>
-      <h1 className="mt-4 text-3xl font-black uppercase tracking-tight text-black">
-        {program.title}
-      </h1>
-      {program.excerpt ? (
-        <p className="mt-3 text-zinc-600">{program.excerpt}</p>
-      ) : null}
-      {cover ? (
-        <div className="mt-8 overflow-hidden rounded-[1.5rem] ring-1 ring-black/5">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={cover} alt="" className="max-h-[420px] w-full object-cover" />
-        </div>
-      ) : null}
-      {videoUrl ? (
-        <div className="mt-8 aspect-video w-full overflow-hidden rounded-[1.5rem] bg-black ring-1 ring-black/5">
-          <video
-            src={videoUrl}
-            controls
-            className="h-full w-full"
-            playsInline
-          />
-        </div>
-      ) : null}
-      {content?.body ? (
-        <div
-          className="prose prose-zinc mt-8 max-w-none rounded-[1.5rem] bg-white p-8 shadow-sm ring-1 ring-black/5 prose-p:text-zinc-700"
-          dangerouslySetInnerHTML={{ __html: escapeAndNl2br(content.body) }}
-        />
-      ) : (
-        <p className="mt-8 text-sm text-zinc-500">
-          Bu program için henüz yazılı içerik eklenmemiş.
-        </p>
-      )}
-    </article>
+    <ProgramMemberPreview
+      title={program.title}
+      excerpt={program.excerpt}
+      coverUrl={cover}
+      videoUrl={videoUrl}
+      body={content?.body ?? null}
+      backHref="/panel/programlar"
+      backLabel="Programlarım"
+    />
   );
-}
-
-/** Basit metin gösterimi — admin ileride rich text ekleyebilir */
-function escapeAndNl2br(raw: string) {
-  return raw
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll("\n", "<br/>");
 }

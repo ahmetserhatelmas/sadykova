@@ -54,12 +54,20 @@ export default async function AdminEvPaketleriPage() {
                   · {p.published ? "yayında" : "taslak"}
                 </p>
               </div>
-              <Link
-                href={`/admin/ev-paketleri/${p.id}`}
-                className="text-xs font-bold uppercase text-[#6a7a00] hover:underline"
-              >
-                Düzenle
-              </Link>
+              <div className="flex flex-wrap items-center gap-4 sm:gap-5">
+                <Link
+                  href={`/admin/ev-paketleri/${p.id}/onizleme`}
+                  className="text-xs font-bold uppercase text-zinc-600 hover:text-black hover:underline"
+                >
+                  Önizle
+                </Link>
+                <Link
+                  href={`/admin/ev-paketleri/${p.id}`}
+                  className="text-xs font-bold uppercase text-[#6a7a00] hover:underline"
+                >
+                  Düzenle
+                </Link>
+              </div>
             </li>
           ))
         )}
