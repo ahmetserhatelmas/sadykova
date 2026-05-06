@@ -1,9 +1,79 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useId, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { slugify } from "@/lib/slugify";
+
+function FileUploadField({
+  label,
+  accept,
+  description,
+  value,
+  onChange,
+  existingHint,
+}: {
+  label: string;
+  accept: string;
+  description: string;
+  value: File | null;
+  onChange: (f: File | null) => void;
+  existingHint?: string | null;
+}) {
+  const id = useId();
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  function clear() {
+    onChange(null);
+    if (inputRef.current) inputRef.current.value = "";
+  }
+
+  return (
+    <div className="rounded-2xl border-2 border-dashed border-black/20 bg-[#F8F9FA] p-4 shadow-inner ring-1 ring-black/5 sm:p-5">
+      <p className="text-xs font-bold uppercase tracking-wide text-zinc-700">
+        {label}
+      </p>
+      <p className="mt-1.5 text-xs leading-relaxed text-zinc-600">{description}</p>
+      {existingHint ? (
+        <p className="mt-2 rounded-lg bg-white/80 px-2.5 py-1.5 text-[11px] font-medium text-zinc-700 ring-1 ring-black/5">
+          Mevcut: <span className="font-mono text-zinc-900">{existingHint}</span>
+        </p>
+      ) : null}
+      <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
+        <input
+          ref={inputRef}
+          id={id}
+          type="file"
+          accept={accept}
+          className="sr-only"
+          onChange={(e) => onChange(e.target.files?.[0] ?? null)}
+        />
+        <label
+          htmlFor={id}
+          className="inline-flex cursor-pointer items-center justify-center rounded-full bg-[#D1FF4E] px-6 py-3 text-xs font-black uppercase text-black shadow-sm ring-1 ring-black/10 transition-[filter] hover:brightness-95 active:brightness-90"
+        >
+          Dosya seç
+        </label>
+        <div className="min-w-0 flex-1 rounded-xl border border-black/10 bg-white px-3 py-2.5 text-sm font-medium text-zinc-800 ring-1 ring-black/5">
+          {value ? (
+            <span className="break-all text-black">{value.name}</span>
+          ) : (
+            <span className="text-zinc-500">Henüz dosya seçilmedi</span>
+          )}
+        </div>
+        {value ? (
+          <button
+            type="button"
+            onClick={clear}
+            className="rounded-full border border-black/15 bg-white px-4 py-2 text-xs font-bold uppercase text-zinc-700 hover:bg-zinc-50"
+          >
+            Kaldır
+          </button>
+        ) : null}
+      </div>
+    </div>
+  );
+}
 
 type Initial = {
   id: string;
@@ -244,24 +314,30 @@ export function ProgramForm({
         />
         Ana vitrinde göster
       </label>
-      <label className="block text-xs font-bold uppercase text-zinc-500">
-        Kapak görseli
-        <input
-          type="file"
-          accept="image/*"
-          onChange={(e) => setCoverFile(e.target.files?.[0] ?? null)}
-          className="mt-1 w-full text-sm"
-        />
-      </label>
-      <label className="block text-xs font-bold uppercase text-zinc-500">
-        Video dosyası
-        <input
-          type="file"
-          accept="video/*"
-          onChange={(e) => setVideoFile(e.target.files?.[0] ?? null)}
-          className="mt-1 w-full text-sm"
-        />
-      </label>
+      <FileUploadField
+        label="Kapak görseli"
+        accept="image/*"
+        description="JPG, PNG veya WebP önerilir. Liste ve vitrinde görünür."
+        value={coverFile}
+        onChange={setCoverFile}
+        existingHint={
+          mode === "edit" && initial?.cover_image_path && !coverFile
+            ? initial.cover_image_path.split("/").pop() ?? initial.cover_image_path
+            : null
+        }
+      />
+      <FileUploadField
+        label="Video dosyası"
+        accept="video/*"
+        description="Üyelere açılacak ders videosu (ör. MP4). Yükleme biraz sürebilir."
+        value={videoFile}
+        onChange={setVideoFile}
+        existingHint={
+          mode === "edit" && initial?.video_path && !videoFile
+            ? initial.video_path.split("/").pop() ?? initial.video_path
+            : null
+        }
+      />
       {err ? <p className="text-sm text-red-600">{err}</p> : null}
       {msg ? <p className="text-sm text-green-700">{msg}</p> : null}
       <button
