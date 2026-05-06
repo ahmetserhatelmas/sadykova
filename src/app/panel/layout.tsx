@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import { LogoutButton } from "@/components/auth/LogoutButton";
 import { EmailConfirmedNotice } from "@/components/panel/EmailConfirmedNotice";
+import { PanelAdminLink } from "@/components/panel/PanelAdminLink";
 import { PanelTabNav } from "@/components/panel/PanelTabNav";
 import { createClient } from "@/lib/supabase/server";
 import { redirectIfEmailUnconfirmed } from "@/lib/supabase/require-email-confirmed";
@@ -45,14 +46,7 @@ export default async function PanelLayout({
             {site.brand}
           </Link>
           <div className="flex flex-wrap items-center gap-3">
-            {isAdmin ? (
-              <Link
-                href="/admin"
-                className="rounded-full bg-[#D1FF4E] px-4 py-1.5 text-xs font-black uppercase hover:brightness-95"
-              >
-                Yönetim
-              </Link>
-            ) : null}
+            {isAdmin ? <PanelAdminLink /> : null}
             <LogoutButton className="rounded-full border border-black/10 bg-white px-4 py-1.5 text-xs font-black uppercase text-zinc-600 hover:border-black/20 hover:text-black disabled:opacity-60" />
           </div>
         </div>
