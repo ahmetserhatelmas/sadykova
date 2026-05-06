@@ -15,7 +15,7 @@ export default async function PanelProgramPage({ params }: Props) {
 
   const { data: program } = await supabase
     .from("programs")
-    .select("id,title,slug,excerpt,cover_image_path")
+    .select("id,title,slug,excerpt,cover_image_path,home_package_id")
     .eq("slug", slug)
     .maybeSingle();
 
@@ -28,7 +28,28 @@ export default async function PanelProgramPage({ params }: Props) {
     .eq("program_id", program.id)
     .maybeSingle();
 
-  if (!access) {
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("membership_tier")
+    .eq("id", user.id)
+    .maybeSingle();
+
+  let viaPackage = false;
+  if (program.home_package_id && profile?.membership_tier) {
+    const { data: hp } = await supabase
+      .from("home_packages")
+      .select("level_display")
+      .eq("id", program.home_package_id)
+      .maybeSingle();
+    if (
+      hp &&
+      hp.level_display === String(profile.membership_tier)
+    ) {
+      viaPackage = true;
+    }
+  }
+
+  if (!access && !viaPackage) {
     return (
       <div className="mt-10 rounded-[1.5rem] bg-white p-8 shadow-sm ring-1 ring-black/5">
         <h1 className="text-xl font-black uppercase">{program.title}</h1>

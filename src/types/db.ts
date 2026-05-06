@@ -20,6 +20,8 @@ export type Program = {
   sort_order: number;
   published: boolean;
   show_on_home: boolean;
+  home_package_id: string | null;
+  list_group_title: string | null;
 };
 
 export type ProgramContent = {
@@ -32,4 +34,11 @@ export type UserProgramAccess = {
   user_id: string;
   program_id: string;
   granted_at: string;
+};
+
+export type HomePackage = {
+  id: string;
+  title: string;
+  level_display: string;
+  sort_order: number;
 };

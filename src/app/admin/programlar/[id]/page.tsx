@@ -8,10 +8,15 @@ type Props = { params: Promise<{ id: string }> };
 export default async function AdminProgramEditPage({ params }: Props) {
   const { id } = await params;
   const supabase = await createClient();
+  const { data: homePackages } = await supabase
+    .from("home_packages")
+    .select("id,title,level_display,sort_order")
+    .order("sort_order");
+
   const { data: program } = await supabase
     .from("programs")
     .select(
-      "id,title,slug,excerpt,price_label,sort_order,published,show_on_home,cover_image_path",
+      "id,title,slug,excerpt,price_label,sort_order,published,show_on_home,cover_image_path,home_package_id,list_group_title",
     )
     .eq("id", id)
     .maybeSingle();
@@ -36,6 +41,8 @@ export default async function AdminProgramEditPage({ params }: Props) {
     body: content?.body ?? "",
     cover_image_path: program.cover_image_path,
     video_path: content?.video_path ?? null,
+    home_package_id: program.home_package_id,
+    list_group_title: program.list_group_title,
   };
 
   return (
@@ -50,7 +57,11 @@ export default async function AdminProgramEditPage({ params }: Props) {
         Programı düzenle
       </h1>
       <div className="mt-8">
-        <ProgramForm mode="edit" initial={initial} />
+        <ProgramForm
+          mode="edit"
+          initial={initial}
+          homePackages={homePackages ?? []}
+        />
       </div>
     </div>
   );

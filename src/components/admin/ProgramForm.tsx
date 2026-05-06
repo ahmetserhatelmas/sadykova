@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useId, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { slugify } from "@/lib/slugify";
+import type { HomePackage } from "@/types/db";
 
 function FileUploadField({
   label,
@@ -87,14 +88,18 @@ type Initial = {
   body: string;
   cover_image_path: string | null;
   video_path: string | null;
+  home_package_id: string | null;
+  list_group_title: string | null;
 };
 
 export function ProgramForm({
   mode,
   initial,
+  homePackages,
 }: {
   mode: "create" | "edit";
   initial?: Initial;
+  homePackages: HomePackage[];
 }) {
   const router = useRouter();
   const [title, setTitle] = useState(initial?.title ?? "");
@@ -105,6 +110,12 @@ export function ProgramForm({
   const [published, setPublished] = useState(initial?.published ?? false);
   const [showOnHome, setShowOnHome] = useState(initial?.show_on_home ?? true);
   const [body, setBody] = useState(initial?.body ?? "");
+  const [homePackageId, setHomePackageId] = useState(
+    initial?.home_package_id ?? "",
+  );
+  const [listGroupTitle, setListGroupTitle] = useState(
+    initial?.list_group_title ?? "",
+  );
   const [coverFile, setCoverFile] = useState<File | null>(null);
   const [videoFile, setVideoFile] = useState<File | null>(null);
   const [msg, setMsg] = useState<string | null>(null);
@@ -144,6 +155,8 @@ export function ProgramForm({
             sort_order: sortOrder,
             published,
             show_on_home: showOnHome,
+            home_package_id: homePackageId || null,
+            list_group_title: listGroupTitle.trim() || null,
           })
           .select("id")
           .single();
@@ -207,6 +220,8 @@ export function ProgramForm({
             published,
             show_on_home: showOnHome,
             cover_image_path: coverPath,
+            home_package_id: homePackageId || null,
+            list_group_title: listGroupTitle.trim() || null,
           })
           .eq("id", id);
         if (uErr) throw uErr;
@@ -279,6 +294,40 @@ export function ProgramForm({
           className="mt-1 w-full rounded-xl border border-black/10 px-3 py-2 text-sm"
         />
       </label>
+      <div className="rounded-2xl border border-black/10 bg-[#F8F9FA] p-4 ring-1 ring-black/5">
+        <p className="text-xs font-bold uppercase text-zinc-600">
+          Paket ve gruplama
+        </p>
+        <p className="mt-1 text-xs leading-relaxed text-zinc-600">
+          Üyenin profilindeki paket etiketi (1 / 2 / 3) bu ev paketinin seviyesiyle
+          aynıysa program otomatik görünür. İsterseniz üyeler sayfasından tek tek
+          de işaretleyebilirsiniz.
+        </p>
+        <label className="mt-4 block text-xs font-bold uppercase text-zinc-500">
+          Ev paketi
+          <select
+            value={homePackageId}
+            onChange={(e) => setHomePackageId(e.target.value)}
+            className="mt-1 w-full rounded-xl border border-black/10 bg-white px-3 py-2 text-sm font-medium normal-case text-black"
+          >
+            <option value="">— Paket yok (yalnızca manuel erişim) —</option>
+            {homePackages.map((pk) => (
+              <option key={pk.id} value={pk.id}>
+                {pk.title} (seviye {pk.level_display})
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="mt-4 block text-xs font-bold uppercase text-zinc-500">
+          Liste grubu başlığı (isteğe bağlı)
+          <input
+            value={listGroupTitle}
+            onChange={(e) => setListGroupTitle(e.target.value)}
+            placeholder="Örn. Hafta 1 · Üst vücut"
+            className="mt-1 w-full rounded-xl border border-black/10 bg-white px-3 py-2 text-sm font-medium normal-case placeholder:font-normal placeholder:text-zinc-400"
+          />
+        </label>
+      </div>
       <div className="grid gap-4 sm:grid-cols-2">
         <label className="block text-xs font-bold uppercase text-zinc-500">
           Fiyat etiketi (örn. 1.990 ₺)

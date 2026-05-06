@@ -111,8 +111,10 @@ export default function AdminUyelerPage() {
         Üyeler ve erişim
       </h1>
       <p className="mt-2 max-w-2xl text-sm text-zinc-600">
-        Üç paket etiketi üyenin profilinde görünür. Hangi programların açılacağını
-        her üye için ayrı işaretleyin.
+        Üyelik paketi (1 / 2 / 3), ev paketiyle aynı seviyedeki programlara{" "}
+        <span className="font-semibold text-black">otomatik erişim</span> verir.
+        Aşağıdaki kutularla ek olarak tek tek program da açabilir veya paket
+        dışı içerik paylaşabilirsiniz.
       </p>
       {err ? <p className="mt-4 text-sm text-red-600">{err}</p> : null}
       {loading ? (
