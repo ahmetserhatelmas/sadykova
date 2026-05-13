@@ -163,9 +163,10 @@ async function main() {
     process.exit(1);
   }
 
-  const patchUrl = `${baseUrl}/auth/v1/admin/users/${user.id}`;
-  const res = await fetch(patchUrl, {
-    method: "PATCH",
+  const updateUrl = `${baseUrl}/auth/v1/admin/users/${user.id}`;
+  // GoTrue Admin API: PUT (PATCH bazı sürümlerde 405 döndürür)
+  const res = await fetch(updateUrl, {
+    method: "PUT",
     headers: {
       apikey: serviceRole,
       Authorization: `Bearer ${serviceRole}`,
@@ -175,11 +176,13 @@ async function main() {
   });
   const out = await readJsonBody(res);
   if (!res.ok) {
+    const allow = res.headers.get("Allow");
     const detail =
       formatApiError(out) ??
       (out._raw ? `Ham yanıt: ${out._raw}` : null) ??
       (out._empty ? "(yanıt gövdesi boş)" : JSON.stringify(out));
     console.error(`Güncelleme başarısız (HTTP ${res.status}):`, detail);
+    if (allow) console.error("Sunucunun izin verdiği yöntemler:", allow);
     process.exit(1);
   }
   console.log("Tamam. Şifre güncellendi:", out.email ?? emailArg);
