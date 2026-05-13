@@ -8,6 +8,8 @@
  *
  * veya tek satır (shell geçmişine düşer):
  *   node scripts/set-supabase-password.mjs dilarakazdal@gmail.com 'YeniSifre123!'
+ *
+ * zsh/bash: şifrede ! varsa mutlaka tek tırnak: 'Rio2026!'  (tırnaksız ! geçmiş genişletmesi bozar)
  */
 
 import * as fs from "node:fs";
@@ -15,6 +17,31 @@ import * as path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+/** @param {Response} res */
+async function readJsonBody(res) {
+  const raw = await res.text();
+  if (!raw || !raw.trim()) return { _empty: true, _raw: "" };
+  try {
+    return JSON.parse(raw);
+  } catch {
+    return { _parseError: true, _raw: raw.slice(0, 2000) };
+  }
+}
+
+function formatApiError(out) {
+  if (!out || typeof out !== "object") return String(out);
+  return (
+    out.msg ??
+    out.message ??
+    out.error_description ??
+    out.error?.message ??
+    (out.weak_password?.reasons?.length
+      ? `Zayıf şifre: ${out.weak_password.reasons.join("; ")}`
+      : null) ??
+    (Object.keys(out).length === 0 ? null : JSON.stringify(out))
+  );
+}
 
 function loadEnv() {
   const root = path.join(__dirname, "..");
@@ -85,13 +112,10 @@ async function listAllUsers(baseUrl, serviceRole) {
         Authorization: `Bearer ${serviceRole}`,
       },
     });
-    const body = await res.json().catch(() => ({}));
+    const body = await readJsonBody(res);
     if (!res.ok) {
-      throw new Error(
-        typeof body?.msg === "string"
-          ? body.msg
-          : JSON.stringify(body) || res.statusText,
-      );
+      const detail = formatApiError(body) ?? body?._raw ?? res.statusText;
+      throw new Error(`Kullanıcı listesi (${res.status}): ${detail}`);
     }
     const batch = body.users ?? [];
     users.push(...batch);
@@ -149,9 +173,13 @@ async function main() {
     },
     body: JSON.stringify({ password }),
   });
-  const out = await res.json().catch(() => ({}));
+  const out = await readJsonBody(res);
   if (!res.ok) {
-    console.error("Güncelleme başarısız:", out?.msg ?? JSON.stringify(out));
+    const detail =
+      formatApiError(out) ??
+      (out._raw ? `Ham yanıt: ${out._raw}` : null) ??
+      (out._empty ? "(yanıt gövdesi boş)" : JSON.stringify(out));
+    console.error(`Güncelleme başarısız (HTTP ${res.status}):`, detail);
     process.exit(1);
   }
   console.log("Tamam. Şifre güncellendi:", out.email ?? emailArg);
