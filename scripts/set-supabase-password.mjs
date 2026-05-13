@@ -12,62 +12,12 @@
  * zsh/bash: şifrede ! varsa mutlaka tek tırnak: 'Rio2026!'  (tırnaksız ! geçmiş genişletmesi bozar)
  */
 
-import * as fs from "node:fs";
-import * as path from "node:path";
-import { fileURLToPath } from "node:url";
-
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-
-/** @param {Response} res */
-async function readJsonBody(res) {
-  const raw = await res.text();
-  if (!raw || !raw.trim()) return { _empty: true, _raw: "" };
-  try {
-    return JSON.parse(raw);
-  } catch {
-    return { _parseError: true, _raw: raw.slice(0, 2000) };
-  }
-}
-
-function formatApiError(out) {
-  if (!out || typeof out !== "object") return String(out);
-  return (
-    out.msg ??
-    out.message ??
-    out.error_description ??
-    out.error?.message ??
-    (out.weak_password?.reasons?.length
-      ? `Zayıf şifre: ${out.weak_password.reasons.join("; ")}`
-      : null) ??
-    (Object.keys(out).length === 0 ? null : JSON.stringify(out))
-  );
-}
-
-function loadEnv() {
-  const root = path.join(__dirname, "..");
-  const merged = {};
-  for (const name of [".env", ".env.local"]) {
-    const p = path.join(root, name);
-    if (!fs.existsSync(p)) continue;
-    const text = fs.readFileSync(p, "utf8");
-    for (const line of text.split("\n")) {
-      const t = line.trim();
-      if (!t || t.startsWith("#")) continue;
-      const i = t.indexOf("=");
-      if (i === -1) continue;
-      const key = t.slice(0, i).trim();
-      let val = t.slice(i + 1).trim();
-      if (
-        (val.startsWith('"') && val.endsWith('"')) ||
-        (val.startsWith("'") && val.endsWith("'"))
-      ) {
-        val = val.slice(1, -1);
-      }
-      merged[key] = val;
-    }
-  }
-  return merged;
-}
+import {
+  adminPutUser,
+  getAdminUserByEmail,
+  loadEnv,
+  printAdminFailure,
+} from "./supabase-admin-helper.mjs";
 
 function questionHidden(query) {
   return new Promise((resolve) => {
@@ -98,31 +48,6 @@ function questionHidden(query) {
     };
     stdin.on("data", onData);
   });
-}
-
-async function listAllUsers(baseUrl, serviceRole) {
-  const users = [];
-  let page = 1;
-  const perPage = 1000;
-  for (;;) {
-    const url = `${baseUrl}/auth/v1/admin/users?page=${page}&per_page=${perPage}`;
-    const res = await fetch(url, {
-      headers: {
-        apikey: serviceRole,
-        Authorization: `Bearer ${serviceRole}`,
-      },
-    });
-    const body = await readJsonBody(res);
-    if (!res.ok) {
-      const detail = formatApiError(body) ?? body?._raw ?? res.statusText;
-      throw new Error(`Kullanıcı listesi (${res.status}): ${detail}`);
-    }
-    const batch = body.users ?? [];
-    users.push(...batch);
-    if (batch.length < perPage) break;
-    page += 1;
-  }
-  return users;
 }
 
 async function main() {
@@ -156,33 +81,18 @@ async function main() {
     process.exit(1);
   }
 
-  const users = await listAllUsers(baseUrl, serviceRole);
-  const user = users.find((u) => (u.email ?? "").toLowerCase() === email);
+  const user = await getAdminUserByEmail(baseUrl, serviceRole, email);
   if (!user?.id) {
     console.error(`Bu e-posta ile kullanıcı bulunamadı: ${emailArg}`);
     process.exit(1);
   }
 
-  const updateUrl = `${baseUrl}/auth/v1/admin/users/${user.id}`;
-  // GoTrue Admin API: PUT (PATCH bazı sürümlerde 405 döndürür)
-  const res = await fetch(updateUrl, {
-    method: "PUT",
-    headers: {
-      apikey: serviceRole,
-      Authorization: `Bearer ${serviceRole}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ password }),
+  const { res, out } = await adminPutUser(baseUrl, serviceRole, user.id, {
+    password,
   });
-  const out = await readJsonBody(res);
+
   if (!res.ok) {
-    const allow = res.headers.get("Allow");
-    const detail =
-      formatApiError(out) ??
-      (out._raw ? `Ham yanıt: ${out._raw}` : null) ??
-      (out._empty ? "(yanıt gövdesi boş)" : JSON.stringify(out));
-    console.error(`Güncelleme başarısız (HTTP ${res.status}):`, detail);
-    if (allow) console.error("Sunucunun izin verdiği yöntemler:", allow);
+    printAdminFailure(res, out, "Güncelleme başarısız");
     process.exit(1);
   }
   console.log("Tamam. Şifre güncellendi:", out.email ?? emailArg);
